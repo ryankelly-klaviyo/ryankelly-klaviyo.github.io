@@ -1,0 +1,103 @@
+<html>
+
+<head>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <title>Custom Klaviyo Form For Multiple Accounts</title>
+</head>
+
+<body>
+    <p>
+        This is an example of a custom form to allow signing up to a specified account. The use case is a customer who
+        has a Canadian and US site, and would like a form that allows customers on any page to sign up for relevant
+        marketing. Like a top-level landing page for their brand before they select their region.
+    </p>
+    <p>
+        It's recommended that you use Google's reCAPTCHA v2 to prevent bot issues with your list. This is included in
+        standard Klaviyo forms, but needs to be added here as this is fully custom.
+    </p>
+    <p>
+        This example uses <a href="https://developers.google.com/recaptcha/docs/invisible#examples"
+            target="_blank">Invisible reCAPTCHA v2</a>. Details on acquiring an API key can be found <a
+            href="https://developers.google.com/recaptcha/intro#recaptcha-overview" target="_blank">here</a>.
+    </p>
+    <form id="klaviyo-custom-form">
+        <label for="fname">First Name:</label><br />
+        <input type="text" id="fname" name="fname"><br />
+
+        <label for="lname">Last Name:</label><br />
+        <input type="text" id="lname" name="lname"> <br />
+
+        <label for="email">Email:</label><br />
+        <input type="text" id="email" name="email">
+
+        <fieldset>
+            <legend>Region:</legend>
+            <div> 
+                <input type="radio" id="ca" name="region" value="ca"><label for="ca">CA</label>
+            </div>
+            <div> 
+                <input type="radio" id="us" name="region" value="us"><label for="us">US</label>
+            </div>
+        </fieldset>
+
+
+        <button class="g-recaptcha" data-sitekey="your-recaptcha-api-key"
+            data-callback="subscribe">Submit</button>
+    </form>
+
+    <script type="text/javascript">
+        const form = document.getElementById("klaviyo-custom-form");
+
+        function subscribe(token) {
+            let account = "";
+            let list_id = "";
+
+            let firstName = form.fname.value;
+            let lastName = form.lname.value;
+            let email = form.email.value;
+            let region = form.region.value;
+
+            switch (region) {
+                case "ca":
+                    account = "klaviyo-public-api-key";
+                    list_id = "defined-list-id";
+                    break;
+                case "us":
+                    account = "klaviyo-public-api-key";
+                    list_id = "defined-list-id";
+                    break;
+                default:
+                    return;
+                    break;
+            }
+
+            const options = {
+                method: 'POST',
+                headers: { revision: '2023-01-24', 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    data: {
+                        type: 'subscription',
+                        attributes: {
+                            properties: {
+                                'First Name': firstName,
+                                'Last Name': lastName
+                            },
+                            list_id: list_id,
+                            email: email
+                        }
+                    }
+                })
+            };
+
+            fetch(`https://a.klaviyo.com/client/subscriptions/?company_id=${account}`, options)
+                .then(response => {
+                    if (response.status !== 202) { // Client-side endpoints always return 202 as data is processed async
+                        console.log(response.statusTest);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+    </script>
+</body>
+
+</html>
