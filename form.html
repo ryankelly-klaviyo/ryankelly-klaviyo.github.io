@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Form to Napkin!</title>
+</head>
+
+<body>
+    <p>
+        This form sends some stuff to Napkin and prints the response in the console.
+    </p>
+    <form id="klaviyo-custom-form">
+        <label for="fname">First Name:</label><br />
+        <input type="text" id="fname" name="fname"><br />
+
+        <label for="lname">Last Name:</label><br />
+        <input type="text" id="lname" name="lname"> <br />
+
+        <label for="email">Email:</label><br />
+        <input type="text" id="email" name="email">
+
+        <input type="submit"></input>
+    </form>
+
+    <script type="text/javascript">
+        const form = document.getElementById("klaviyo-custom-form");
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            let firstName = form.fname.value;
+            let lastName = form.lname.value;
+            let email = form.email.value;
+
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "First Name": firstName,
+                    "Last Name": lastName,
+                    "$email": email
+                })
+            };
+
+            fetch("http://michael-fooksa.npkn.net/update-list-from-site/", options)
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log("data");
+                    console.log(data);
+                })
+                .catch(err => {
+                    console.log("error!");
+                    console.error(err);
+                });
+
+        });
+    </script>
+</body>
+</html>
