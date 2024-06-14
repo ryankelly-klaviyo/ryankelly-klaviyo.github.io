@@ -2,7 +2,7 @@
     console.log("Test!");
     // Handle dataLayer events
     function handleDataLayerPush(event) {        
-
+        console.log(event);
         var klaviyo = window.klaviyo || [];
 
         var KLAVIYO_EVENT_KEY_MAP = {
