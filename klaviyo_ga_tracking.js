@@ -13,8 +13,10 @@
             "test_event": "Test Event"
         }
         if (event.event == "test_event"){
+            console.log("send test event");
             klaviyo.track(KLAVIYO_EVENT_KEY_MAP[eventName]);                
         }
+        console.log("past test event");
         var eventName;
         var ecommerceItems;
         var isGA4Event = false;
