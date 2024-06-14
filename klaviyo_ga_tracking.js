@@ -34,7 +34,10 @@
                     isGAEvent = true; 
                 }                
             } catch (err) {}
-        }                
+        }
+        if (eventName == "test_event"){
+            klaviyo.track(KLAVIYO_EVENT_KEY_MAP[eventName]);                
+        }
 
         // Track select ecommerce events assuming standard GA4 ecommerce event formatting. 
         if (eventName && ecommerceItems) {
