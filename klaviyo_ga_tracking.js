@@ -1,4 +1,5 @@
-(function() {    
+(function() {
+    console.log("Test!");
     // Handle dataLayer events
     function handleDataLayerPush(event) {        
 
