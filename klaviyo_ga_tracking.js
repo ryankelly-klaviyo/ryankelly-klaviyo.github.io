@@ -12,7 +12,9 @@
             "purchase": "Placed Order",
             "test_event": "Test Event"
         }
-
+        if (event.event == "test_event"){
+            klaviyo.track(KLAVIYO_EVENT_KEY_MAP[eventName]);                
+        }
         var eventName;
         var ecommerceItems;
         var isGA4Event = false;
@@ -35,9 +37,7 @@
                 }                
             } catch (err) {}
         }
-        if (eventName == "test_event"){
-            klaviyo.track(KLAVIYO_EVENT_KEY_MAP[eventName]);                
-        }
+
 
         // Track select ecommerce events assuming standard GA4 ecommerce event formatting. 
         if (eventName && ecommerceItems) {
