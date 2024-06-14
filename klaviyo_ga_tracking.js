@@ -9,7 +9,8 @@
             "view_item": "Viewed Product",
             "add_to_cart": "Added to Cart",
             "begin_checkout": "Started Checkout",
-            "purchase": "Placed Order"
+            "purchase": "Placed Order",
+            "test_event": "Test Event"
         }
 
         var eventName;
@@ -54,6 +55,8 @@
                 checkoutData.$value = parseFloat(checkoutValue.toFixed(2));
                 checkoutData.Items = ecommerceItems;
                 klaviyo.track(KLAVIYO_EVENT_KEY_MAP[eventName], checkoutData);                
+            } else if (eventName == "test_event"){
+                klaviyo.track(KLAVIYO_EVENT_KEY_MAP[eventName]);                
             }
         }
     }
