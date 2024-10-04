@@ -7,7 +7,7 @@
         <description>
             Test Product from ryan.kelly@klaviyo.com
         </description>
-        <product_type>Bed Basics , Pillow Protectors , Pillow Protectors</product_type>
+        <product_type></product_type>
         <link>
             https://www.thecompanystore.com/selections/duo-neck-posture-pillow-cover/PP70-OS-WHITE.html
         </link>
@@ -15,11 +15,7 @@
             https://companystore-res.cloudinary.com/image/upload/f_auto,q_90,dpr_auto/w_420/webimages/pp70_cover_duosleep_main.jpg
         </image_link>
         <price>100.00</price>
-        <category>
-            Bedding Essentials > Shop > The Company Store,Company Essentials > Collections > Shop > The Company
-            Store,Protectors > Bedding Essentials > Shop > The Company Store,Bedding Essentials > Shop > The Company
-            Store,Shop > The Company Store,The Company Store
-        </category>
+        <category></category>
         <inventory_quantity>11</inventory_quantity>
     </Product>
 </Products>
