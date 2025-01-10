@@ -29,7 +29,9 @@
             <input type="file" name="csvFile" id="csvFile" accept=".csv">
             <label for="csvFile">Choose CSV File</label>
         </form>
-
+    </section>
+    <section id="log">
+        
     </section>
         <script>
             const fileInput = document.getElementById("csvFile");
@@ -49,11 +51,21 @@
                 const targetFileSize = 45000000; // 45mb-ish
                 let fileSize = e.total;
                 let contents = reader.result;
-                let lines = contents.split('\r\n');
+                let lines;
+                
+                if(contents.split('\r\n').length===1){
+                    lines = contents.split('\n');
+                }else{
+                    lines = contents.split('\r\n')
+                }
                 let rowsInFile = lines.length;
+                
+                let p = document.createElement("p");
+                p.textContent = `Rows in file: ${rowsInFile}`;
+                document.getElementById("log").appendChild(p);
+                
                 let headers = lines[0];
                 lines.shift();
-
                 let rowsPerFile = (rowsInFile / fileSize) * targetFileSize;
                 
                 newRows = [];
