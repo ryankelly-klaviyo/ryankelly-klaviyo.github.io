@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>CSV File Splitter</title>
+    </head>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+        section {
+            width: 600px;
+            padding: 20px;
+        }
+        form {
+            border: 1px solid black;
+            padding: 20px;
+        }
+    </style>
+    <body>
+        <section>
+            <p>
+                Select a CSV file. It will be split into multiple files under 50mb (target size around 45mb). This entirely happens <em>in your browser</em> with JavaScript - nothing is uploaded to any remote servers. Please see the source code for yourself. Feel free to run locally and modify as needed.
+            </p>
+            <p>
+                After selecting the file to be split, several files will automatically be downloaded.
+            </p>
+        <form>
+            <input type="file" name="csvFile" id="csvFile" accept=".csv">
+            <label for="csvFile">Choose CSV File</label>
+        </form>
+
+    </section>
+        <script>
+            const fileInput = document.getElementById("csvFile");
+            const reader = new FileReader();
+            let baseName = "";
+            fileInput.addEventListener("change", function () {
+                const file = fileInput.files[0];
+                baseName = file.name.split(".")[0];
+                if (file && file.type === "text/csv") {
+                    reader.readAsText(file);
+                } else {
+                    alert("Please select a CSV file.");
+                }
+            });
+
+            reader.addEventListener("load", function(e) {
+                const targetFileSize = 45000000; // 45mb-ish
+                let fileSize = e.total;
+                let contents = reader.result;
+                let lines = contents.split('\r\n');
+                let rowsInFile = lines.length;
+                let headers = lines[0];
+                lines.shift();
+
+                let rowsPerFile = (rowsInFile / fileSize) * targetFileSize;
+                
+                newRows = [];
+                newRows.push(headers);
+
+                fileCount = 1;
+                lines.every((v, i) => {
+                    newRows.push(v);
+                    if(i >= (rowsPerFile * fileCount)){
+                        downloadFile(newRows, fileCount);
+                        newRows = [];
+                        newRows.push(headers);
+                        fileCount++;
+                    }
+                    return true;
+                })
+                downloadFile(newRows, fileCount);
+            });
+
+            function downloadFile(rows, fileCount){
+                rows = rows.join("\n");
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(new Blob(
+                    [rows], {type: "text/csv"}
+                ))
+                link.download = `${baseName}_${fileCount}.csv`;              
+                link.click(); // Auto download
+            }
+        </script>
+    </body>
+</html>
