@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>CSV Header Renaming</title>
+    <title>CSV Header Remapping</title>
 </head>
 <style>
     body {
@@ -47,10 +47,11 @@
         let newHeaderLine;
         const chunkSize = 1024 * 1024; // 1MB chunks (adjust as needed)
         let file;
-        
         async function processAndSaveCSV(file) {
             const logSection = document.getElementById("log");
-            let p = document.createElement("p");
+            let completeEl = document.createElement("p");
+            let progressEl = document.createElement("p");
+            let percentage = 0.00;
 
             try {
                 const fileHandle = await window.showSaveFilePicker({
@@ -60,7 +61,8 @@
 
                 const writableStream = await fileHandle.createWritable();        
                 let offset = 0;
-
+                progressEl.textContent = `${percentage} complete`;
+                logSection.appendChild(progressEl);
                 while (offset < file.size) {
                     const slice = file.slice(offset, offset + chunkSize);
                     const chunkText = await new Promise((resolve, reject) => {
@@ -72,21 +74,23 @@
 
                     // Process the chunk (e.g., modify data, filter rows)
                     const processedChunk = processCSVChunk(chunkText, offset);
-                    console.log(`processed ${offset}`);
+                    percentage = (100*(offset / file.size)).toFixed(2);
+                    progressEl.textContent = `${percentage} complete`;
                     // Write the processed chunk to the writable stream
                     await writableStream.write(processedChunk);
 
                     offset += chunkSize;
                 }
-
+                progressEl.textContent = `Saving.`;
                 await writableStream.close();
-                console.log('CSV processing and saving complete.');
-                p.textContent = "CSV saved.";
-                logSection.appendChild(p);
+
+                
+                completeEl.textContent = "CSV saved.";
+                logSection.appendChild(completeEl);
             } catch (error) {
                 console.error('Error processing and saving CSV:', error);
-                p.textContent = "Error processing and saving - see console.";
-                logSection.appendChild(p);
+                completeEl.textContent = "Error processing and saving - see console.";
+                logSection.appendChild(completeEl);
             }
         }
 
@@ -150,7 +154,7 @@
                 formText = document.createElement("input");
                 formText.setAttribute("type", "text");
                 formText.setAttribute("name", element);
-                formText.value = element+"_new";
+                // formText.value = element+"_new";
 
                 mapperDest.appendChild(formLabel);
                 mapperDest.appendChild(formText);
@@ -162,8 +166,6 @@
 
             document.getElementById('changeHeaders').addEventListener('click', async (event) => {
                 await processAndSaveCSV(file);
-
-                console.log(getNewHeaders());
             });
         }
 
