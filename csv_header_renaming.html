@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CSV Header Renaming</title>
+</head>
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+    }
+
+    section {
+        width: 600px;
+        padding: 20px;
+    }
+
+    form {
+        border: 1px solid black;
+        padding: 20px;
+    }
+</style>
+
+<body>
+    <section>
+        <p>
+            Select a CSV file.
+        </p>
+        <p>
+            It will read the first line, give you a form for renaming the file headers, and then save it as a new file with those headers so it can be used with the SFTP import. It can handle extremely large files (tested up to 3gb).
+        </p>
+        <form>
+            <input type="file" name="csvFile" id="csvFile" accept=".csv">
+            <label for="csvFile">Choose CSV File</label>
+        </form>
+    </section>
+    <section>
+        <form id="mapping">
+        </form>
+
+    </section>
+
+    <section id="log">
+
+    </section>
+    <script>
+        let newHeaderLine;
+        const chunkSize = 1024 * 1024; // 1MB chunks (adjust as needed)
+        let file;
+        
+        async function processAndSaveCSV(file) {
+            const logSection = document.getElementById("log");
+            let p = document.createElement("p");
+
+            try {
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: 'processed.csv',
+                    types: [{ description: 'CSV files', accept: { 'text/csv': ['.csv'] } }],
+                });
+
+                const writableStream = await fileHandle.createWritable();        
+                let offset = 0;
+
+                while (offset < file.size) {
+                    const slice = file.slice(offset, offset + chunkSize);
+                    const chunkText = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => resolve(event.target.result);
+                        reader.onerror = reject;
+                        reader.readAsText(slice);
+                    });
+
+                    // Process the chunk (e.g., modify data, filter rows)
+                    const processedChunk = processCSVChunk(chunkText, offset);
+                    console.log(`processed ${offset}`);
+                    // Write the processed chunk to the writable stream
+                    await writableStream.write(processedChunk);
+
+                    offset += chunkSize;
+                }
+
+                await writableStream.close();
+                console.log('CSV processing and saving complete.');
+                p.textContent = "CSV saved.";
+                logSection.appendChild(p);
+            } catch (error) {
+                console.error('Error processing and saving CSV:', error);
+                p.textContent = "Error processing and saving - see console.";
+                logSection.appendChild(p);
+            }
+        }
+
+        function processCSVChunk(chunkText, offset) {
+            let newChunk = "";
+            if (offset === 0) {
+                // First row, change headers
+                let lines;
+                let cr = "";
+                if (chunkText.split('\r\n').length === 1) {
+                    lines = chunkText.split('\n');
+                    cr = '\n';
+                } else {
+                    lines = chunkText.split('\r\n')
+                    cr = '\r\n';
+                }
+                lines[0] = getNewHeaders();
+                newChunk = lines.join(cr);
+            } else {
+                newChunk = chunkText;
+            }
+            return newChunk;
+        }
+
+        function loadHeaders(file){
+            // Read first chunkSize of file looking for header row.
+            const slice = file.slice(0, chunkSize);
+            const reader = new FileReader();
+            let header;
+            reader.readAsText(slice);
+
+            reader.onload = function(event){
+                const chunkText = event.target.result;
+                let lines;
+                if (chunkText.split('\r\n').length === 1) {
+                    lines = chunkText.split('\n');
+                } else {
+                    lines = chunkText.split('\r\n')
+                }
+                headers = lines[0].split(",");
+                createMapper(headers);
+            }
+        }
+
+        function createMapper(headers){
+            const mapperDest = document.getElementById('mapping');
+            let formLabel;
+            let formText;
+
+            let submitButton = document.createElement("button");
+            submitButton.setAttribute("type", "button");
+            submitButton.setAttribute("value", "Change Headers");
+            submitButton.setAttribute("id", "changeHeaders");
+            submitButton.textContent = "Change Headers";
+            
+            headers.forEach(element => {
+                formLabel = document.createElement("label");
+                formLabel.setAttribute("for", element);
+                formLabel.textContent = element+": ";
+
+                formText = document.createElement("input");
+                formText.setAttribute("type", "text");
+                formText.setAttribute("name", element);
+                formText.value = element+"_new";
+
+                mapperDest.appendChild(formLabel);
+                mapperDest.appendChild(formText);
+                
+                mapperDest.appendChild(document.createElement("br"));
+                
+            });
+            mapperDest.appendChild(submitButton);
+
+            document.getElementById('changeHeaders').addEventListener('click', async (event) => {
+                await processAndSaveCSV(file);
+
+                console.log(getNewHeaders());
+            });
+        }
+
+        function getNewHeaders(){
+            let newHeaders = [];
+            document.getElementById("mapping").querySelectorAll("input").forEach(element=>{
+                newHeaders.push(element.value);
+            });
+            return newHeaders.join(",");
+        }
+
+        // Example usage:
+        document.getElementById('csvFile').addEventListener('change', async (event) => {
+            file = event.target.files[0];
+            if (file) {
+                loadHeaders(file);
+            }
+        });
+
+
+    </script>
+</body>
+
+</html>
