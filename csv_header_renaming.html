@@ -22,12 +22,14 @@
 </style>
 
 <body>
-    <section>
+    <section id="main">
         <p>
             Select a CSV file.
         </p>
         <p>
-            It will read the first line, give you a form for renaming the file headers, and then save it as a new file with those headers so it can be used with the SFTP import. It can handle extremely large files (tested up to 3gb).
+            It will read the first line, give you a form for renaming the file headers, and then save it as a new file
+            with those headers so it can be used with the SFTP import. It can handle extremely large files (tested up to
+            3gb).
         </p>
         <form>
             <input type="file" name="csvFile" id="csvFile" accept=".csv">
@@ -47,6 +49,7 @@
         let newHeaderLine;
         const chunkSize = 1024 * 1024; // 1MB chunks (adjust as needed)
         let file;
+
         async function processAndSaveCSV(file) {
             const logSection = document.getElementById("log");
             let completeEl = document.createElement("p");
@@ -59,7 +62,7 @@
                     types: [{ description: 'CSV files', accept: { 'text/csv': ['.csv'] } }],
                 });
 
-                const writableStream = await fileHandle.createWritable();        
+                const writableStream = await fileHandle.createWritable();
                 let offset = 0;
                 progressEl.textContent = `${percentage} complete`;
                 logSection.appendChild(progressEl);
@@ -74,7 +77,7 @@
 
                     // Process the chunk (e.g., modify data, filter rows)
                     const processedChunk = processCSVChunk(chunkText, offset);
-                    percentage = (100*(offset / file.size)).toFixed(2);
+                    percentage = (100 * (offset / file.size)).toFixed(2);
                     progressEl.textContent = `${percentage} complete`;
                     // Write the processed chunk to the writable stream
                     await writableStream.write(processedChunk);
@@ -84,7 +87,6 @@
                 progressEl.textContent = `Saving.`;
                 await writableStream.close();
 
-                
                 completeEl.textContent = "CSV saved.";
                 logSection.appendChild(completeEl);
             } catch (error) {
@@ -115,14 +117,14 @@
             return newChunk;
         }
 
-        function loadHeaders(file){
+        function loadHeaders(file) {
             // Read first chunkSize of file looking for header row.
             const slice = file.slice(0, chunkSize);
             const reader = new FileReader();
             let header;
             reader.readAsText(slice);
 
-            reader.onload = function(event){
+            reader.onload = function (event) {
                 const chunkText = event.target.result;
                 let lines;
                 if (chunkText.split('\r\n').length === 1) {
@@ -135,7 +137,7 @@
             }
         }
 
-        function createMapper(headers){
+        function createMapper(headers) {
             const mapperDest = document.getElementById('mapping');
             let formLabel;
             let formText;
@@ -145,11 +147,11 @@
             submitButton.setAttribute("value", "Change Headers");
             submitButton.setAttribute("id", "changeHeaders");
             submitButton.textContent = "Change Headers";
-            
+
             headers.forEach(element => {
                 formLabel = document.createElement("label");
                 formLabel.setAttribute("for", element);
-                formLabel.textContent = element+": ";
+                formLabel.textContent = element + ": ";
 
                 formText = document.createElement("input");
                 formText.setAttribute("type", "text");
@@ -158,9 +160,9 @@
 
                 mapperDest.appendChild(formLabel);
                 mapperDest.appendChild(formText);
-                
+
                 mapperDest.appendChild(document.createElement("br"));
-                
+
             });
             mapperDest.appendChild(submitButton);
 
@@ -169,19 +171,52 @@
             });
         }
 
-        function getNewHeaders(){
+        function getNewHeaders() {
             let newHeaders = [];
-            document.getElementById("mapping").querySelectorAll("input").forEach(element=>{
+            document.getElementById("mapping").querySelectorAll("input").forEach(element => {
                 newHeaders.push(element.value);
             });
             return newHeaders.join(",");
         }
 
-        // Example usage:
+        function isNonChromium() {
+            // Check for common Chromium-based browser identifiers
+            const userAgent = navigator.userAgent;
+
+            // Common Chromium-based browser strings:
+            const chromiumStrings = [
+                "Chrome",
+                "Chromium",
+                "Edg", // Edge
+                "Opera",
+                "OPR", // Opera
+                "Vivaldi",
+                "SamsungBrowser",
+                "Silk", // Amazon Silk
+                "Electron", // Electron apps
+                "wv", // Android WebView
+                "Yandex", // Yandex Browser
+            ];
+
+            // Check if any of the chromium strings are present.
+            const isChromium = chromiumStrings.some((str) => userAgent.indexOf(str) !== -1);
+            return !isChromium;
+        }
+
         document.getElementById('csvFile').addEventListener('change', async (event) => {
             file = event.target.files[0];
             if (file) {
                 loadHeaders(file);
+            }
+        });
+
+        window.addEventListener('load', (event) => {
+            if (isNonChromium()){
+                const mainSection = document.getElementById("main");
+                mainSection.innerHTML = "";
+                const p = document.createElement("p");
+                p.textContent = "Whoops! This tool is currently only supported on Chrome-based browsers.";
+                mainSection.appendChild(p);
             }
         });
 
