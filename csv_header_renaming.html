@@ -24,12 +24,10 @@
 <body>
     <section id="main">
         <p>
-            Select a CSV file.
+            This allows you to rename the first row of a CSV file. This is helpful if you have a large CSV file that you can't easily open, and you just need to rename the column headers to remap data. This reads the first row, creates a form for renaming the file headers. After clicking "Change Headers", you need to choose where to save the newly created file. It can handle extremely large files - tested up to 3gb.
         </p>
         <p>
-            It will read the first line, give you a form for renaming the file headers, and then save it as a new file
-            with those headers so it can be used with the SFTP import. It can handle extremely large files (tested up to
-            3gb).
+            This runs entirely locally and in your browser, nothing is sent to a server. See source code <a href="https://github.com/ryankelly-klaviyo/ryankelly-klaviyo.github.io/blob/main/csv_header_renaming.html">here</a>.
         </p>
         <form>
             <input type="file" name="csvFile" id="csvFile" accept=".csv">
@@ -58,8 +56,9 @@
 
             try {
                 const fileHandle = await window.showSaveFilePicker({
-                    suggestedName: 'processed.csv',
+                    suggestedName: `${file.name.split(".")[0]}_renamed_headers.csv`,
                     types: [{ description: 'CSV files', accept: { 'text/csv': ['.csv'] } }],
+                    startIn: "desktop"
                 });
 
                 const writableStream = await fileHandle.createWritable();
