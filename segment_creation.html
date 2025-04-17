@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Segment Creation</title>
+</head>
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+    }
+
+    section {
+        width: 600px;
+        padding: 20px;
+    }
+
+    form {
+        border: 1px solid black;
+        padding: 20px;
+    }
+</style>
+
+<body>
+    <section id="main">
+        <p>
+            Choose a .csv containing location IDs. Give it a name. Create a segment.
+        </p>
+
+        <form>
+            <label for="companyId">Company ID: </label><input type="text" id="companyId" name="companyId"><br />
+            <label for="profileEmail">Profile Email: </label><input type="text" id="profileEmail" name="profileEmail"><br />
+            <label for="segmentName">Segment Name: </label><input type="text" id="segmentName" name="segmentName"><br />
+            <label for="hasHeaderRow">File has header row: </label><input type="checkbox" id="hasHeaderRow" name="hasHeaderRow" checked><br />
+            <input type="file" name="csvFile" id="csvFile" accept=".csv">
+            <label for="csvFile">Choose CSV File</label>
+        </form>
+    </section>
+    <section id="log">
+
+    </section>
+
+    <script>
+        const reader = new FileReader();
+        let locations = [];
+        let hasFileHeader;
+
+        function readFile(file) {
+            reader.readAsText(file);
+        }
+
+        reader.addEventListener("load", (event) => {
+            let locations = createLocationList();
+            makeCall(locations);
+        });
+
+        function makeCall(locations){
+            
+            //
+            // These are the variables you may need to change.
+            // companyId - the public API key of the account you want to send the event to
+            // profileEmail - the profile you want to create the event for. This should be an employee profile, and should also be a profile filter in the flow in Klaviyo that creates the segment.
+            // apiVersion - this may need to be changed once every two years to keep up with our API version updates.
+            //
+            let error = false;
+
+            let companyId = document.getElementById("companyId").value;
+            if (!companyId){
+                error = true;
+                document.getElementById("log").innerHTML += "Company ID not entered. Correct and try again.<br />";
+            }
+            let profileEmail = document.getElementById("profileEmail").value;
+            if (!profileEmail){
+                error = true;
+                document.getElementById("log").innerHTML += "Profile Email not entered. Correct and try again.<br />";
+            }
+            const apiVersion = "2025-04-15";
+
+            // You should not need to change this, but you can.
+            const metricName = "Segment Create";
+
+            let segmentName = document.getElementById("segmentName").value;
+            if (!segmentName){
+                error = true;
+                document.getElementById("log").innerHTML += "Segment Name not entered. Correct and try again.<br />";
+            }
+
+            if (error){
+                return;
+            }
+            const options = {
+                method: 'POST',
+                headers: {
+                    accept: 'application/vnd.api+json',
+                    revision: apiVersion,
+                    'content-type': 'application/vnd.api+json'
+                }
+            };
+            
+            options['body'] = JSON.stringify({
+                "data": {
+                    "type": "event",
+                    "attributes": {
+                        "properties": {
+                            "Segment Name": segmentName,
+                            "Locations": locations
+                        },
+                        "metric": {
+                            "data": {
+                                "type": "metric",
+                                "attributes": {
+                                    "name": metricName
+                                }
+                            }
+                        },
+                        "profile": {
+                            "data": {
+                                "type": "profile",
+                                "attributes": {
+                                    "email": profileEmail,
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            fetch(`https://a.klaviyo.com/client/events?company_id=${companyId}`, options)
+                .then(res => {
+                    return res.text();
+                })
+                .then(text => {
+                    if (text.trim() === ""){
+                        // success
+                        document.getElementById("log").innerHTML += `Segment creation event triggered for segment ${segmentName} on user profile ${profileEmail}. Please validate in Klaviyo. <br />`;
+                        return;
+                    }else{
+                        data = JSON.parse(text);
+                        throw data;
+                    }                    
+                })
+                .catch(err => {
+                    document.getElementById("log").innerHTML += `An error occured: ${JSON.stringify(err)}. See console for more details.<br />`;
+                    console.error(err);
+                });
+            
+        }
+
+        function createLocationList(){
+            const columnIndex = 0;
+            let startRow;
+            if(hasFileHeader){
+                startRow = 1;
+            }else{
+                startRow = 0;
+            }
+
+            let contents = reader.result;
+            let lines;
+
+            if(contents.split('\r\n').length===1){
+                lines = contents.split('\n');
+            }else{
+                lines = contents.split('\r\n')
+            }
+
+            let rowsInFile = lines.length;
+            
+            lines.every((line, i) => {
+                row = line.split(',');
+                if(i >= startRow){
+                    locations.push(row[columnIndex]);
+                }
+                return true;
+            })
+            
+            let p = document.createElement("p");
+            p.textContent = `Locations read from file: ${rowsInFile}`;
+            document.getElementById("log").appendChild(p);
+            return locations;
+        }
+
+
+        document.getElementById('csvFile').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                if (file && file.type === "text/csv") {
+                    document.getElementById("log").innerHTML = "";
+                    hasFileHeader = document.getElementById("hasHeaderRow").checked;
+                    readFile(file);
+                } else {
+                    alert("Please select a CSV file.");
+                }
+            }
+        });
+
+    </script>
+</body>
+
+</html>
